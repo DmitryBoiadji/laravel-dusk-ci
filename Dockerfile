@@ -1,5 +1,5 @@
 FROM ubuntu:bionic
-MAINTAINER Chilio 
+MAINTAINER Chilio
 
 ENV DEBIAN_FRONTEND noninteractive
 ENV DEBCONF_NONINTERACTIVE_SEEN true
@@ -21,7 +21,7 @@ RUN sed -i'' 's/archive\.ubuntu\.com/us\.archive\.ubuntu\.com/' /etc/apt/sources
 RUN apt-get update
 RUN apt-get upgrade -yq
 RUN apt-get update && apt-get install -yq --fix-missing libgd-tools
-# Install PHP 
+# Install PHP
 RUN apt-get update && apt-get install -yq --fix-missing \
     php7.2 \
     php7.2-bcmath \
@@ -96,9 +96,9 @@ RUN \
   && php -r "if (hash('SHA384', file_get_contents('/tmp/composer-setup.php')) \
     !== trim(file_get_contents('/tmp/composer-setup.sig'))) { unlink('/tmp/composer-setup.php'); \
     echo 'Invalid installer' . PHP_EOL; exit(1); }" \
-  && php /tmp/composer-setup.php --filename=composer --install-dir=$COMPOSER_HOME 
+  && php /tmp/composer-setup.php --filename=composer --install-dir=$COMPOSER_HOME
 
-ADD commands/xvfb.init.sh /etc/init.d/xvfb 
+ADD commands/xvfb.init.sh /etc/init.d/xvfb
 
 ADD commands/start-nginx-ci-project.sh /usr/bin/start-nginx-ci-project
 RUN chmod +x /usr/bin/start-nginx-ci-project
@@ -152,6 +152,23 @@ RUN wget https://phar.phpunit.de/phpunit.phar
 RUN chmod +x phpunit.phar
 RUN mv phpunit.phar /usr/local/bin/phpunit
 
+
+RUN curl -OL https://squizlabs.github.io/PHP_CodeSniffer/phpcs.phar && \
+    cp /tmp/phpcs.phar /usr/local/bin/phpcs && \
+    chmod +x /usr/local/bin/phpcs
+# Set some useful defaults to phpcs
+# show_progress - I like to see a progress while phpcs does its magic
+# colors - Enable colors; My terminal supports more than black and white
+# report_width - I am using a large display so I can afford a larger width
+# encoding - Unicode all the way
+RUN /usr/local/bin/phpcs --config-set show_progress 1 && \
+    /usr/local/bin/phpcs --config-set colors 1 && \
+    /usr/local/bin/phpcs --config-set report_width 140 && \
+    /usr/local/bin/phpcs --config-set encoding utf-8
+ENTRYPOINT ["/usr/local/bin/phpcs"]
+
+
+
 RUN npm install -g node-gyp
 RUN npm install --unsafe-perm -g node-sass
 RUN npm install -g gulp
@@ -160,7 +177,7 @@ RUN apt-get update && apt-get install -yq --fix-missing supervisor
 
 ADD configs/supervisord.conf /etc/supervisor/supervisord.conf
 
-ADD configs/nginx-default-site /etc/nginx/sites-available/default 
+ADD configs/nginx-default-site /etc/nginx/sites-available/default
 
 RUN composer global require hirak/prestissimo
 
